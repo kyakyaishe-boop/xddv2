@@ -1,0 +1,47 @@
+name: Build TierTagger 26.2
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Set up Gradle 9.5.1
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '9.5.1'
+          cache-provider: basic
+
+      - name: Verify toolchain
+        run: |
+          java -version
+          gradle --version
+
+      - name: Build mod
+        run: gradle --no-daemon clean build --stacktrace
+
+      - name: Show built jars
+        run: find build/libs -maxdepth 1 -type f -printf '%f\n'
+
+      - name: Upload Minecraft jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: TierTagger-26.2
+          path: build/libs/tiertagger-*.jar
+          if-no-files-found: error
